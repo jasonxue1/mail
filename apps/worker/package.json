@@ -1,0 +1,17 @@
+{
+  "name": "mail-worker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "packageManager": "pnpm@10.25.0",
+  "dependencies": {
+    "resend": "^6.9.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.65.0"
+  }
+}
