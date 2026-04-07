@@ -81,16 +81,6 @@ export default {
         );
       }
 
-      if (fromLocalSuffix && !fromLocal.endsWith(fromLocalSuffix)) {
-        return json(
-          {
-            ok: false,
-            error: `fromLocal must end with '${fromLocalSuffix}'`,
-          },
-          400,
-        );
-      }
-
       const from = `${name} <${fromLocal}${fromSuffix}>`;
       const resend = new Resend(env.RESEND_API_KEY);
       const { data, error } = await resend.emails.send({
