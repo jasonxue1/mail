@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 
-const fromDomain = ref("");
+const fromSuffix = ref("");
 const sending = ref(false);
 const output = ref("Ready to send.");
 
@@ -48,17 +48,17 @@ async function sendMail() {
   }
 }
 
-async function loadFromDomain() {
+async function loadFromSuffix() {
   try {
-    const res = await fetch("/api/from-domain");
+    const res = await fetch("/api/from-suffix");
     const data = await res.json().catch(() => ({}));
-    if (res.ok && data && data.fromDomain) {
-      fromDomain.value = String(data.fromDomain);
+    if (res.ok && data && data.fromSuffix) {
+      fromSuffix.value = String(data.fromSuffix);
     }
   } catch (_) {}
 }
 
-onMounted(loadFromDomain);
+onMounted(loadFromSuffix);
 </script>
 
 <template>
@@ -79,7 +79,7 @@ onMounted(loadFromDomain);
           <span class="label">From</span>
           <div class="from-wrap">
             <input v-model.trim="form.fromLocal" required spellcheck="false" />
-            <span v-if="fromDomain" class="suffix">@{{ fromDomain }}</span>
+            <span v-if="fromSuffix" class="suffix">{{ fromSuffix }}</span>
           </div>
         </label>
 

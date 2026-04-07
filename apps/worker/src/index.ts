@@ -3,6 +3,7 @@ import { Resend } from "resend";
 interface Env {
   RESEND_API_KEY: string;
   RESEND_FROM_DOMAIN: string;
+  RESEND_FROM_LOCAL_SUFFIX?: string;
 }
 
 type SendBody = {
@@ -24,6 +25,10 @@ function sanitizeLocalPart(input: string) {
   return input.trim().replace(/\s+/g, "").replace(/@/g, "");
 }
 
+function isValidFromLocal(local: string) {
+  return /^[a-z0-9][a-z0-9._+-]*$/i.test(local);
+}
+
 async function parseJsonBody(req: Request): Promise<SendBody | null> {
   const data = await req.json().catch(() => null);
   if (!data || typeof data !== "object") {
@@ -36,9 +41,11 @@ async function parseJsonBody(req: Request): Promise<SendBody | null> {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+    const fromLocalSuffix = (env.RESEND_FROM_LOCAL_SUFFIX ?? "").trim();
+    const fromSuffix = `${fromLocalSuffix}@${env.RESEND_FROM_DOMAIN}`;
 
-    if (url.pathname === "/api/from-domain" && req.method === "GET") {
-      return json({ ok: true, fromDomain: env.RESEND_FROM_DOMAIN }, 200);
+    if (url.pathname === "/api/from-suffix" && req.method === "GET") {
+      return json({ ok: true, fromSuffix }, 200);
     }
 
     if (url.pathname === "/api/send" && req.method === "POST") {
@@ -63,7 +70,28 @@ export default {
         );
       }
 
-      const from = `${name} <${fromLocal}@${env.RESEND_FROM_DOMAIN}>`;
+      if (!isValidFromLocal(fromLocal)) {
+        return json(
+          {
+            ok: false,
+            error:
+              "fromLocal contains invalid characters; allowed: letters, numbers, ., _, -, +",
+          },
+          400,
+        );
+      }
+
+      if (fromLocalSuffix && !fromLocal.endsWith(fromLocalSuffix)) {
+        return json(
+          {
+            ok: false,
+            error: `fromLocal must end with '${fromLocalSuffix}'`,
+          },
+          400,
+        );
+      }
+
+      const from = `${name} <${fromLocal}${fromSuffix}>`;
       const resend = new Resend(env.RESEND_API_KEY);
       const { data, error } = await resend.emails.send({
         from,
